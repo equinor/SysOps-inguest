@@ -3,11 +3,11 @@
 $Subscription = Get-AzSubscription -SubscriptionName 'Q901-platform-dev'
 $ResourceGroup = Get-AzResourceGroup -Name 'rg-ovea'
 $Location = "westeurope"
-$ZipName = "InstallLAPSv2"
+$ZipName = "InstallLAPS"
 $ContentURIMSI = "https://github.com/equinor/SysOps-inguest/raw/master/InstallMSI/$ZipName/$ZipName.zip"
-$PolicyId = "VM-Guest-Policy-LAPSv2"
-$PolicyDisplayName = "VM Guest Policy LAPS Deploy v2"
-$PolicyDescription = "This Policy deploys Local Administrator Password Solution (LAPS) on the Server v2"
+$PolicyId = "VM-Guest-Policy-LAPS"
+$PolicyDisplayName = "VM Guest Policy LAPS Deploy"
+$PolicyDescription = "This Policy deploys Local Administrator Password Solution (LAPS) on the Server"
 
 # Generates localhost.mof in InstallMSI folder
 Configuration InstallMSI {
