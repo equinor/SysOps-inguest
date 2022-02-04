@@ -2,12 +2,12 @@
 # Fill in all parameters
 $Subscription = Get-AzSubscription -SubscriptionName 'Q901-platform-dev'
 $ResourceGroup = Get-AzResourceGroup -Name 'rg-ovea'
-$ContentURIMSI = 'https://github.com/equinor/SysOps-inguest/raw/master/InstallMSI/InstallLAPS/InstallLAPS.zip'
 $Location = "westeurope"
-$ZipName = "InstallLAPS"
-$PolicyId = "VM-Guest-Policy-LAPS"
-$PolicyDisplayName = "VM Guest Policy LAPS Deploy"
-$PolicyDescription = "This Policy deploys Local Administrator Password Solution (LAPS) on the Server"
+$ZipName = "InstallLAPSv2"
+$ContentURIMSI = "https://github.com/equinor/SysOps-inguest/raw/master/InstallMSI/$ZipName/$ZipName.zip"
+$PolicyId = "VM-Guest-Policy-LAPSv2"
+$PolicyDisplayName = "VM Guest Policy LAPS Deploy v2"
+$PolicyDescription = "This Policy deploys Local Administrator Password Solution (LAPS) on the Server v2"
 
 # Generates localhost.mof in InstallMSI folder
 Configuration InstallMSI {
@@ -32,7 +32,6 @@ New-GuestConfigurationPackage `
   -Type AuditAndSet `
   -Force
 
-
 # For the next step make sure newest zip is available in repo and update $ContentURIMSI
 # Create policy locally
 New-GuestConfigurationPolicy `
@@ -52,7 +51,6 @@ New-AzPolicyDefinition `
     -Policy 'InstallMSI\policy\DeployIfNotExists.json' `
     -SubscriptionId $($Subscription.Id)
 
-
 # Assign policy to Resource Group
 $Policy = Get-AzPolicyDefinition -Name $PolicyId
 New-AzPolicyAssignment `
@@ -62,12 +60,19 @@ New-AzPolicyAssignment `
     -IdentityType 'SystemAssigned' `
     -Location $Location
 
-# --- #
+# Assign role to resourcegroup (This step is not needed if assign policy is done in portal)
+$SpObject = Get-AzADServicePrincipal -DisplayName $PolicyId
+# Reason for sleep. It failed during one of our tests. SpObject was not set.
+Start-Sleep -Seconds 1
+New-AzRoleAssignment `
+    -ObjectId $SpObject.Id `
+    -Scope $ResourceGroup.ResourceId `
+    -RoleDefinitionName 'Contributor'
 
 # Clean up
 Remove-Item -Path '.\InstallMSI\localhost.mof' -Force
 Remove-Item -Path '.\InstallMSI\policy' -Recurse -Force
-Remove-Item -Path '.\InstallMSI\InstallLAPS\unzippedPackage' -Recurse -Force
+Remove-Item -Path ".\InstallMSI\$ZipName\unzippedPackage" -Recurse -Force
 
 # Remove Policy assignment
 Remove-AzPolicyAssignment -Scope $ResourceGroup.ResourceId -Name $Policyid
